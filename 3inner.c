@@ -61,7 +61,7 @@ static inline float8 inner_vec(float8 *x0, float8 *x1, float8 *x2, float8 *x3,
     z2 += *(y2 + i) * *(x2 + i);
 #endif
 #if U > 3
-    z3 += *(y3 + i);
+    z3 += *(y3 + i) * *(x3 + i);
 #endif
 #if U > 4
     z4 += *(x4 + i) * *(y4 + i);
