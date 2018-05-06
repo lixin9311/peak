@@ -3,8 +3,11 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define CPUSPEED_MHZ 2900
 #define U 14
+
+#ifndef CPUSPEED_MHZ
+#define CPUSPEED_MHZ 2900
+#endif
 
 typedef float float8 __attribute__((vector_size(32)));
 typedef unsigned long long uint64;
@@ -16,7 +19,7 @@ uint64 tickToUsec(uint64 ts1, uint64 ts2) {
   return (ts2 - ts1) / (CPUSPEED_MHZ);
 }
 
-float8 axpy_many(float8 a, float8 x0, float8 x1, float8 x2, float8 x3,
+static inline float8 axpy_many(float8 a, float8 x0, float8 x1, float8 x2, float8 x3,
                  float8 x4, float8 x5, float8 x6, float8 x7, float8 x8,
                  float8 x9, float8 x10, float8 x11, float8 x12, float8 x13,
                  float8 x14, float8 x15, float8 c, long n) {
@@ -113,10 +116,11 @@ int main(int argc, char **argv) {
   float8 x15 = *((float8 *)&x_[120]);
 
   rdtscp(&ts1);
-  float8 y = axpy_many(a, x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12,
+  volatile float8 y = axpy_many(a, x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12,
                        x13, x14, x15, c, n);
   rdtscp(&ts2);
   double flops = U * 16 * n;
+  printf("cache factor: %d\n", U);
   printf("%f flops\n", flops);
   printf("%llu clocks\n", ts2 - ts1);
   printf("%f flops/clock\n", flops / (ts2 - ts1));

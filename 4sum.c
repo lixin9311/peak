@@ -2,8 +2,7 @@
 #include "x86intrin.h"
 #include <stdlib.h>
 #include <string.h>
-
-#define U 16
+#define U 14
 
 #ifndef CPUSPEED_MHZ
 #define CPUSPEED_MHZ 2900
@@ -19,63 +18,65 @@ uint64 tickToUsec(uint64 ts1, uint64 ts2) {
   return (ts2 - ts1) / (CPUSPEED_MHZ);
 }
 
-static inline void copy_vec(float8 *x0, float8 *x1, float8 *x2, float8 *x3, float8 *x4,
-              float8 *x5, float8 *x6, float8 *x7, float8 *x8, float8 *x9,
-              float8 *x10, float8 *x11, float8 *x12, float8 *x13, float8 *x14,
-              float8 *x15, float8 *y0, float8 *y1, float8 *y2, float8 *y3,
-              float8 *y4, float8 *y5, float8 *y6, float8 *y7, float8 *y8,
-              float8 *y9, float8 *y10, float8 *y11, float8 *y12, float8 *y13,
-              float8 *y14, float8 *y15, long n) {
+static inline void sum_vec(float8 *x0, float8 *x1, float8 *x2, float8 *x3,
+                           float8 *x4, float8 *x5, float8 *x6, float8 *x7,
+                           float8 *x8, float8 *x9, float8 *x10, float8 *x11,
+                           float8 *x12, float8 *x13, float8 *x14, float8 *x15,
+                           float8 *y0, float8 *y1, float8 *y2, float8 *y3,
+                           float8 *y4, float8 *y5, float8 *y6, float8 *y7,
+                           float8 *y8, float8 *y9, float8 *y10, float8 *y11,
+                           float8 *y12, float8 *y13, float8 *y14, float8 *y15,
+                           long n) {
   long i;
   asm volatile("# BEGIN!!!");
   for (i = 0; i < n; i += U) {
 #if U > 0
-    *(x0 + i) = *(y0 + i);
+    *(x0 + i) += *(y0 + i);
 #endif
 #if U > 1
-    *(x1 + i) = *(y2 + i);
+    *(x1 + i) += *(y2 + i);
 #endif
 #if U > 2
-    *(x2 + i) = *(y2 + i);
+    *(x2 + i) += *(y2 + i);
 #endif
 #if U > 3
-    *(x3 + i) = *(y3 + i);
+    *(x3 + i) += *(y3 + i);
 #endif
 #if U > 4
-    *(x4 + i) = *(y4 + i);
+    *(x4 + i) += *(y4 + i);
 #endif
 #if U > 5
-    *(x5 + i) = *(y5 + i);
+    *(x5 + i) += *(y5 + i);
 #endif
 #if U > 6
-    *(x6 + i) = *(y6 + i);
+    *(x6 + i) += *(y6 + i);
 #endif
 #if U > 7
-    *(x7 + i) = *(y7 + i);
+    *(x7 + i) += *(y7 + i);
 #endif
 #if U > 8
-    *(x8 + i) = *(y8 + i);
+    *(x8 + i) += *(y8 + i);
 #endif
 #if U > 9
-    *(x9 + i) = *(y9 + i);
+    *(x9 + i) += *(y9 + i);
 #endif
 #if U > 10
-    *(x10 + i) = *(y10 + i);
+    *(x10 + i) += *(y10 + i);
 #endif
 #if U > 11
-    *(x11 + i) = *(y11 + i);
+    *(x11 + i) += *(y11 + i);
 #endif
 #if U > 12
-    *(x12 + i) = *(y12 + i);
+    *(x12 + i) += *(y12 + i);
 #endif
 #if U > 13
-    *(x13 + i) = *(y13 + i);
+    *(x13 + i) += *(y13 + i);
 #endif
 #if U > 14
-    *(x14 + i) = *(y14 + i);
+    *(x14 + i) += *(y14 + i);
 #endif
 #if U > 15
-    *(x15 + i) = *(y15 + i);
+    *(x15 + i) += *(y15 + i);
 #endif
   }
   asm volatile("# END!!!");
@@ -129,9 +130,9 @@ int main(int argc, char **argv) {
   float8 *y15 = ((float8 *)&y_[120]);
 
   rdtscp(&ts1);
-  copy_vec(x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15,
-           y0, y1, y2, y3, y4, y5, y6, y7, y8, y9, y10, y11, y12, y13, y14, y15,
-           size);
+  sum_vec(x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15,
+          y0, y1, y2, y3, y4, y5, y6, y7, y8, y9, y10, y11, y12, y13, y14, y15,
+          size);
   rdtscp(&ts2);
   double flops = U * 8 * size;
   printf("cache factor: %d\n", U);
@@ -141,6 +142,7 @@ int main(int argc, char **argv) {
   printf("time: %llu us\n", tickToUsec(ts1, ts2));
   printf("%f flops/clock\n", flops / (ts2 - ts1));
   printf("%.1f GFLOP/s/core\n", flops / 1000 / tickToUsec(ts1, ts2));
-  printf("throughput: %.2lf MBytes/s", 8 * U * size * sizeof(float) * 1000000 / tickToUsec(ts1, ts2) / 1000000.0);
+  printf("throughput: %.2lf MBytes/s", 8 * U * size * sizeof(float) * 1000000 /
+                                           tickToUsec(ts1, ts2) / 1000000.0);
   return 0;
 }
