@@ -16,20 +16,22 @@ static unsigned int dummy;
 static inline void rdtscp(uint64 *ts) {
   asm volatile("CPUID" :::);
   *ts = __rdtscp(&dummy);
-//   asm volatile("CPUID" :::);
+  //   asm volatile("CPUID" :::);
 }
 
 uint64 tickToUsec(uint64 ts1, uint64 ts2) {
   return (ts2 - ts1) / (CPUSPEED_MHZ);
 }
 
-static inline float8 inner_vec(float8 *x0, float8 *x1, float8 *x2, float8 *x3, float8 *x4,
-                 float8 *x5, float8 *x6, float8 *x7, float8 *x8, float8 *x9,
-                 float8 *x10, float8 *x11, float8 *x12, float8 *x13,
-                 float8 *x14, float8 *x15, float8 *y0, float8 *y1, float8 *y2,
-                 float8 *y3, float8 *y4, float8 *y5, float8 *y6, float8 *y7,
-                 float8 *y8, float8 *y9, float8 *y10, float8 *y11, float8 *y12,
-                 float8 *y13, float8 *y14, float8 *y15, long n) {
+static inline float8 inner_vec(float8 *x0, float8 *x1, float8 *x2, float8 *x3,
+                               float8 *x4, float8 *x5, float8 *x6, float8 *x7,
+                               float8 *x8, float8 *x9, float8 *x10, float8 *x11,
+                               float8 *x12, float8 *x13, float8 *x14,
+                               float8 *x15, float8 *y0, float8 *y1, float8 *y2,
+                               float8 *y3, float8 *y4, float8 *y5, float8 *y6,
+                               float8 *y7, float8 *y8, float8 *y9, float8 *y10,
+                               float8 *y11, float8 *y12, float8 *y13,
+                               float8 *y14, float8 *y15, long n) {
   long i;
   asm volatile("# BEGIN!!!");
   float8 z0 = {0, 0, 0, 0, 0, 0, 0, 0};
@@ -110,7 +112,6 @@ int main(int argc, char **argv) {
   float *x_ = malloc(8 * U * size * sizeof(float));
   float *y_ = malloc(8 * U * size * sizeof(float));
   int i;
-  printf("opt size %ld\n", size);
   unsigned short rg[3] = {seed >> 16, seed >> 8, seed};
   for (i = 0; i < 8 * U * size; i++) {
     x_[i] = erand48(rg);
@@ -151,11 +152,13 @@ int main(int argc, char **argv) {
   float8 *y15 = ((float8 *)&y_[120]);
 
   rdtscp(&ts1);
-  volatile float8 result = inner_vec(x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11,
-                            x12, x13, x14, x15, y0, y1, y2, y3, y4, y5, y6, y7,
-                            y8, y9, y10, y11, y12, y13, y14, y15, size);
+  volatile float8 result = inner_vec(
+      x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, y0,
+      y1, y2, y3, y4, y5, y6, y7, y8, y9, y10, y11, y12, y13, y14, y15, size);
   rdtscp(&ts2);
   double flops = 2 * U * 8 * size;
+#ifndef PLOT
+  printf("opt size %ld\n", size);
   printf("cache factor: %d\n", U);
   printf("processed data size: %ld bytes\n", 8 * U * size * sizeof(float));
   printf("%.0f flops\n", flops);
@@ -163,6 +166,12 @@ int main(int argc, char **argv) {
   printf("time: %llu us\n", tickToUsec(ts1, ts2));
   printf("%f flops/clock\n", flops / (ts2 - ts1));
   printf("%.1f GFLOP/s/core\n", flops / 1000 / tickToUsec(ts1, ts2));
-  printf("throughput: %.2lf MBytes/s\n", 8 * U * size * sizeof(float) * 1000000.0 / tickToUsec(ts1, ts2) / 1000000.0);
+  printf("throughput: %.2lf MBytes/s\n", 8 * U * size * sizeof(float) *
+                                             1000000.0 / tickToUsec(ts1, ts2) /
+                                             1000000.0);
+#else
+  printf("%.2lf\n", 8 * U * size * sizeof(float) * 1000000.0 /
+                        tickToUsec(ts1, ts2) / 1000000.0);
+#endif
   return 0;
 }

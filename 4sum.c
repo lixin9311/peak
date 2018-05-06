@@ -89,7 +89,6 @@ int main(int argc, char **argv) {
   float *x_ = malloc(8 * U * size * sizeof(float));
   float *y_ = malloc(8 * U * size * sizeof(float));
   int i;
-  printf("opt size %ld\n", size);
   unsigned short rg[3] = {seed >> 16, seed >> 8, seed};
   for (i = 0; i < 8 * U * size; i++) {
     x_[i] = erand48(rg);
@@ -135,6 +134,8 @@ int main(int argc, char **argv) {
           size);
   rdtscp(&ts2);
   double flops = U * 8 * size;
+#ifndef PLOT
+  printf("opt size %ld\n", size);
   printf("cache factor: %d\n", U);
   printf("processed data size: %ld bytes\n", 8 * U * size * sizeof(float));
   printf("%.0f flops\n", flops);
@@ -142,7 +143,12 @@ int main(int argc, char **argv) {
   printf("time: %llu us\n", tickToUsec(ts1, ts2));
   printf("%f flops/clock\n", flops / (ts2 - ts1));
   printf("%.1f GFLOP/s/core\n", flops / 1000 / tickToUsec(ts1, ts2));
-  printf("throughput: %.2lf MBytes/s\n", 8 * U * size * sizeof(float) * 1000000.0 /
-                                           tickToUsec(ts1, ts2) / 1000000.0);
+  printf("throughput: %.2lf MBytes/s\n", 8 * U * size * sizeof(float) *
+                                             1000000.0 / tickToUsec(ts1, ts2) /
+                                             1000000.0);
+#else
+  printf("%.2lf\n", 8 * U * size * sizeof(float) * 1000000.0 /
+                        tickToUsec(ts1, ts2) / 1000000.0);
+#endif
   return 0;
 }

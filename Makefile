@@ -1,6 +1,7 @@
 
 c_files := $(wildcard *.c)
 exes := $(patsubst %.c,%,$(c_files))
+plot := $(patsubst %.c,%.plot,$(c_files))
 asms := $(patsubst %.c,%.s,$(c_files))
 
 opts := 
@@ -22,12 +23,16 @@ CC := gcc-8
 CFLAGS := $(opts)
 all : $(exes) $(asms)
 
+plot : $(plot)
+
 asm : $(asms)
 
 $(exes) : % : %.c Makefile
 	$(CC) -o $@ $(CFLAGS) $<
 $(asms) : %.s : %.c Makefile
 	$(CC) -S $(CFLAGS) $<
+$(plot) : %.plot : %.c Makefile
+	$(CC) -o $@ $(CFLAGS) -D PLOT $<
 
 clean :
-	rm -f $(asms) $(exes)
+	rm -f $(asms) $(exes) $(plot)

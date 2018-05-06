@@ -19,13 +19,15 @@ uint64 tickToUsec(uint64 ts1, uint64 ts2) {
   return (ts2 - ts1) / (CPUSPEED_MHZ);
 }
 
-static inline void copy_vec(float8 *x0, float8 *x1, float8 *x2, float8 *x3, float8 *x4,
-              float8 *x5, float8 *x6, float8 *x7, float8 *x8, float8 *x9,
-              float8 *x10, float8 *x11, float8 *x12, float8 *x13, float8 *x14,
-              float8 *x15, float8 *y0, float8 *y1, float8 *y2, float8 *y3,
-              float8 *y4, float8 *y5, float8 *y6, float8 *y7, float8 *y8,
-              float8 *y9, float8 *y10, float8 *y11, float8 *y12, float8 *y13,
-              float8 *y14, float8 *y15, long n) {
+static inline void copy_vec(float8 *x0, float8 *x1, float8 *x2, float8 *x3,
+                            float8 *x4, float8 *x5, float8 *x6, float8 *x7,
+                            float8 *x8, float8 *x9, float8 *x10, float8 *x11,
+                            float8 *x12, float8 *x13, float8 *x14, float8 *x15,
+                            float8 *y0, float8 *y1, float8 *y2, float8 *y3,
+                            float8 *y4, float8 *y5, float8 *y6, float8 *y7,
+                            float8 *y8, float8 *y9, float8 *y10, float8 *y11,
+                            float8 *y12, float8 *y13, float8 *y14, float8 *y15,
+                            long n) {
   long i;
   asm volatile("# BEGIN!!!");
   for (i = 0; i < n; i += U) {
@@ -88,7 +90,6 @@ int main(int argc, char **argv) {
   float *x_ = malloc(8 * U * size * sizeof(float));
   float *y_ = malloc(8 * U * size * sizeof(float));
   int i;
-  printf("opt size %ld\n", size);
   unsigned short rg[3] = {seed >> 16, seed >> 8, seed};
   for (i = 0; i < 8 * U * size; i++) {
     x_[i] = erand48(rg);
@@ -134,6 +135,8 @@ int main(int argc, char **argv) {
            size);
   rdtscp(&ts2);
   double flops = U * 8 * size;
+#ifndef PLOT
+  printf("opt size %ld\n", size);
   printf("cache factor: %d\n", U);
   printf("processed data size: %ld bytes\n", 8 * U * size * sizeof(float));
   printf("%.0f flops\n", flops);
@@ -141,6 +144,12 @@ int main(int argc, char **argv) {
   printf("time: %llu us\n", tickToUsec(ts1, ts2));
   printf("%f flops/clock\n", flops / (ts2 - ts1));
   printf("%.1f GFLOP/s/core\n", flops / 1000 / tickToUsec(ts1, ts2));
-  printf("throughput: %.2lf MBytes/s\n", 8 * U * size * sizeof(float) * 1000000.0 / tickToUsec(ts1, ts2) / 1000000.0);
+  printf("throughput: %.2lf MBytes/s\n", 8 * U * size * sizeof(float) *
+                                             1000000.0 / tickToUsec(ts1, ts2) /
+                                             1000000.0);
+#else
+  printf("%.2lf\n", 8 * U * size * sizeof(float) * 1000000.0 /
+                        tickToUsec(ts1, ts2) / 1000000.0);
+#endif
   return 0;
 }
