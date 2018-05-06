@@ -60,3 +60,4 @@ dkms.conf
 2copy
 3inner
 4sum
+*.plot
