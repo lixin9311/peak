@@ -141,6 +141,6 @@ int main(int argc, char **argv) {
   printf("time: %llu us\n", tickToUsec(ts1, ts2));
   printf("%f flops/clock\n", flops / (ts2 - ts1));
   printf("%.1f GFLOP/s/core\n", flops / 1000 / tickToUsec(ts1, ts2));
-  printf("throughput: %.2lf MBytes/s\n", 8 * U * size * sizeof(float) * 1000000 / tickToUsec(ts1, ts2) / 1000000.0);
+  printf("throughput: %.2lf MBytes/s\n", 8 * U * size * sizeof(float) * 1000000.0 / tickToUsec(ts1, ts2) / 1000000.0);
   return 0;
 }
