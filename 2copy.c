@@ -85,10 +85,18 @@ static inline void copy_vec(float8 *x0, float8 *x1, float8 *x2, float8 *x3,
 
 int main(int argc, char **argv) {
   uint64 ts1, ts2;
+  int err;
   long size = (argc > 1 ? atol(argv[1]) : 80000);
   long seed = (argc > 2 ? atol(argv[2]) : 76843802738543);
-  float *x_ = malloc(8 * U * size * sizeof(float));
-  float *y_ = malloc(8 * U * size * sizeof(float));
+  float *x_ = 0;
+  float *y_ = 0;
+  if ((err = posix_memalign((void **)&x_, 64, 8 * U * size * sizeof(float)))) {
+    printf("posix_memalign %s\n", strerror(err));
+  }
+
+  if ((err = posix_memalign((void **)&y_, 64, 8 * U * size * sizeof(float)))) {
+    printf("posix_memalign %s\n", strerror(err));
+  }
   int i;
   unsigned short rg[3] = {seed >> 16, seed >> 8, seed};
   for (i = 0; i < 8 * U * size; i++) {
