@@ -2,7 +2,7 @@
 
 PROG=${PROG:-./a.out}
 FROM=${FROM:-800}
-TO=${TO:-$(($FROM*128))}
+TO=${TO:-$(($FROM*4096))}
 MULT=${MULT:-2}
 REPEAT=${REPEAT:-10}
 N=${N:-$((8*14*4))}
