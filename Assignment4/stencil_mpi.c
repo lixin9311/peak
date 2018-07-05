@@ -2,8 +2,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "mpi.h"
-#include "timing.h"
 #include "string.h"
+#include "timing.h"
 
 #define INNER 1.0
 #define OUTTER 0.0
@@ -328,7 +328,8 @@ int main(int argc, char **argv) {
   }
   wtime = tickToUsec(ts1, ts2);
   if (rank == 0) {
-    fprintf(stderr, "N Size: %d, NT: %d , Used Time: %llu usec\n", x_size, nt, wtime);
+    fprintf(stderr, "N Size: %d, NT: %d, nticks: %d, Used Time: %llu usec\n",
+            x_size, nt, nticks, wtime);
   }
   /* usage: a.out > res.txt
      plot it with gnuplot: splot "res.txt" with lines */

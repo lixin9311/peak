@@ -24,7 +24,7 @@ clean :
 	rm -f stencil_mpi stencil_serial MPI_PingPong.* *.log
 
 rm :
-	rm -f MPI_PingPong.*
+	rm -f MPI_PingPong.* *.log
 
 go :
 	qsub test.sh
