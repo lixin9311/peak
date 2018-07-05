@@ -21,7 +21,7 @@ orig :
 	gcc $(filter %.c,$(orig)) -o stencil_serial $(CFLAGS)
 
 clean :
-	rm -f stencil_mpi stencil_serial MPI_PingPong.*
+	rm -f stencil_mpi stencil_serial MPI_PingPong.* *.log
 
 rm :
 	rm -f MPI_PingPong.*

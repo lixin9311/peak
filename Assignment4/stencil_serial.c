@@ -103,7 +103,7 @@ int main(void) {
     printf("\n");
   }
   wtime = tickToUsec(ts1, ts2);
-  fprintf(stderr, "N Size: %d, NT: %d , Used Time: %llu usec", n, nt, wtime);
+  fprintf(stderr, "N Size: %d, NT: %d , Used Time: %llu usec\n", n, nt, wtime);
   /* usage: a.out > res.txt
      plot it with gnuplot: splot "res.txt" with lines */
   
