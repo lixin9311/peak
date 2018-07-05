@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "mpi.h"
+#include "timing.h"
+#include "string.h"
 
 #define INNER 1.0
 #define OUTTER 0.0
@@ -125,6 +127,7 @@ int main(int argc, char **argv) {
   double *u0, *u1;
   int x_size, y_size, z_size;
   int effective_size;
+  uint64 ts1, ts2, ts3, wtime;
 
   int nticks = NTICKS;
   MPI_Status status;
@@ -282,18 +285,21 @@ int main(int argc, char **argv) {
 
   // wait here
   MPI_Barrier(MPI_COMM_WORLD);
+  ts1 = rdtscp();
   int t;
   for (t = 0; t < nt; t += 2 * nticks) {
     /* time steps 1, 3, 5, ... */
     timeStep(nticks, numtasks, rank, slice_size, y_size, z_size, u0, u1, r);
 
     /* time steps 2, 4, 6, ... */
-    if (nticks & 2 == 0) {
+    if (nticks % 2 == 0) {
       timeStep(nticks, numtasks, rank, slice_size, y_size, z_size, u0, u1, r);
     } else {
       timeStep(nticks, numtasks, rank, slice_size, y_size, z_size, u1, u0, r);
     }
   }
+  MPI_Barrier(MPI_COMM_WORLD);
+  ts2 = rdtscp();
   // sync the result
   int index;
   if (rank == 0) {
@@ -308,7 +314,7 @@ int main(int argc, char **argv) {
     MPI_Send(&U0(nticks, 0, 0), y_size * z_size * effective_size, MPI_DOUBLE, 0,
              0, MPI_COMM_WORLD);
   }
-
+  ts3 = rdtscp();
   /* plot result */
   if (rank == 0) {
     int x_step = (x_size < 30 ? 1 : x_size / 30); /* plot about 30x30 */
@@ -320,7 +326,10 @@ int main(int argc, char **argv) {
       printf("\n");
     }
   }
-
+  wtime = tickToUsec(ts1, ts2);
+  if (rank == 0) {
+    fprintf(stderr, "N Size: %d, NT: %d , Used Time: %llu usec", x_size, nt, wtime);
+  }
   /* usage: a.out > res.txt
      plot it with gnuplot: splot "res.txt" with lines */
   MPI_Finalize();

@@ -7,11 +7,12 @@ opts += -O3
 opts += -D N=64
 opts += -D NT=1000
 opts += -D NTICKS=3
+opts += -I./
 
 CC := mpiicc
 CFLAGS := $(opts)
 all : mpi orig
-run : src go
+run : mpi go
 
 mpi :
 	$(CC) $(filter %.c,$(mpi)) -o stencil_mpi $(CFLAGS)
@@ -27,3 +28,6 @@ rm :
 
 go :
 	qsub test.sh
+
+plot :
+	gnuplot plot

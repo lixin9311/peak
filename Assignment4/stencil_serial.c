@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+#include "timing.h"
 
 #ifndef NT
 #define NT 300
@@ -27,6 +28,7 @@ void timeStep(int n, double *u0, double *u1, double r) {
 int main(void) {
 
   int n, i, j, k;
+  uint64 ts1, ts2, wtime;
 
   /* n is size of memory allocation
      boundaries : index 0 and n-1
@@ -82,7 +84,7 @@ int main(void) {
 	    r);
     exit(0);
   }
-  
+  ts1 = rdtscp();
   int t;
   for (t = 0; t < nt; t += 2) {
     /* time steps 1, 3, 5, ... */
@@ -91,7 +93,7 @@ int main(void) {
     /* time steps 2, 4, 6, ... */
     timeStep(n, u1, u0, r);
   }
-
+  ts2 = rdtscp();
   /* plot result */
   int step = (n < 30 ? 1 : n / 30); /* plot about 30x30 */
   k = (n-1)/2;			/* about z = 0.5 */
@@ -100,7 +102,8 @@ int main(void) {
       printf("%e %e %e\n", i*dx, j*dx, u0[(i*n + j)*n + k]);
     printf("\n");
   }
-  
+  wtime = tickToUsec(ts1, ts2);
+  fprintf(stderr, "N Size: %d, NT: %d , Used Time: %llu usec", n, nt, wtime);
   /* usage: a.out > res.txt
      plot it with gnuplot: splot "res.txt" with lines */
   
