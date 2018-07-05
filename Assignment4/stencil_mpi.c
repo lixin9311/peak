@@ -306,8 +306,8 @@ int main(int argc, char **argv) {
   }
   wtime = tickToUsec(ts1, ts2);
   if (rank == 0) {
-    fprintf(stderr, "N Size: %d, NT: %d, slice_size: %d, nticks: %d, Used Time: %llu usec\n",
-            x_size, nt, slice_size, nticks, wtime);
+    fprintf(stderr, "N Size: %d, NT: %d, slice_size: %d, nprocs: %d, Used Time: %llu usec\n",
+            x_size, nt, slice_size, numtasks, wtime);
   }
   /* usage: a.out > res.txt
      plot it with gnuplot: splot "res.txt" with lines */
