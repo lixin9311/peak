@@ -88,7 +88,7 @@ static inline float8 axpy_many(float8 a, float8 x0, float8 x1, float8 x2,
 
 int main(int argc, char **argv) {
   uint64 ts1, ts2;
-  long n = (argc > 2 ? atol(argv[2]) : 100000000);
+  long n = (argc > 1 ? atol(argv[1]) : 100000000);
   long seed = (argc > 2 ? atol(argv[2]) : 76843802738543);
   float a_[8];
   float x_[8 * U];

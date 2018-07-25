@@ -24,6 +24,8 @@ CC := gcc-8
 CFLAGS := $(opts)
 all : $(exes) $(asms)
 
+bin : $(exes)
+
 plot : $(plot)
 
 asm : $(asms)
