@@ -8,6 +8,7 @@ opts :=
 opts += -march=native 
 opts += -O3
 opts += -D CPUSPEED_MHZ=2900
+opts += -fopenmp
 #opts += -fopt-info-vec-optimized 
 #opts += -fopt-info-vec-missed
 #opts += -std=gnu99

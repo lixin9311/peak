@@ -63,23 +63,9 @@ void timeStep(int nticks, int numprocs, int rank, int slice_size, int y_size,
               int z_size, double *u0, double *u1, double r) {
   static MPI_Status status;
   int i, j, k;
-  int x_start, x_end;
-  int tick;
-  double *tmp;
   // step 1, tik tok
-  for (tick = 0; tick < nticks; tick++) {
-    if (rank == 0) {
-      x_start = 1;
-      x_end = slice_size - tick - 1;
-    } else if (rank == numprocs - 1) {
-      x_start = tick + 1;
-      x_end = slice_size - 1;
-    } else {
-      x_start = tick + 1;
-      x_end = slice_size - tick - 1;
-    }
     // middle
-    for (i = x_start; i < x_end; i++) {  // only X will be restricted
+    for (i = 1; i < slice_size - 1; i++) {  // only X will be restricted
       for (j = 1; j < y_size - 1; j++) {
         for (k = 1; k < z_size - 1; k++) {
           U1(i, j, k) = (1.0 - 6.0 * r) * U0(i, j, k);
@@ -92,31 +78,27 @@ void timeStep(int nticks, int numprocs, int rank, int slice_size, int y_size,
       vector_plus(y_size * z_size, &U0(i - 1, 0, 0), &U1(i, 0, 0), r);
     }
     // u0 is always the newest
-    tmp = u1;
-    u1 = u0;
-    u0 = tmp;
-  }
 
   // exchange and update the left boundry and right boundry
   // odd number rank
   if (rank % 2 == 1) {
     // send left to left & recv right
-    if (rank != 0) SEND_TO_LEFT(u0, nticks);
-    if (rank != numprocs - 1) RECV_FROM_RIGHT(u0, nticks);
+    if (rank != 0) SEND_TO_LEFT(u1, nticks);
+    if (rank != numprocs - 1) RECV_FROM_RIGHT(u1, nticks);
 
     // send right to right & recv left
-    if (rank != numprocs - 1) SEND_TO_RIGHT(u0, nticks);
-    if (rank != 0) RECV_FROM_LEFT(u0, nticks);
+    if (rank != numprocs - 1) SEND_TO_RIGHT(u1, nticks);
+    if (rank != 0) RECV_FROM_LEFT(u1, nticks);
 
     // even number rank
   } else if (rank % 2 == 0) {
     // recv right from right & send left
-    if (rank != numprocs - 1) RECV_FROM_RIGHT(u0, nticks);
-    if (rank != 0) SEND_TO_LEFT(u0, nticks);
+    if (rank != numprocs - 1) RECV_FROM_RIGHT(u1, nticks);
+    if (rank != 0) SEND_TO_LEFT(u1, nticks);
 
     // recv left from left & send right
-    if (rank != 0) RECV_FROM_LEFT(u0, nticks);
-    if (rank != numprocs - 1) SEND_TO_RIGHT(u0, nticks);
+    if (rank != 0) RECV_FROM_LEFT(u1, nticks);
+    if (rank != numprocs - 1) SEND_TO_RIGHT(u1, nticks);
   }
 }
 
@@ -129,7 +111,7 @@ int main(int argc, char **argv) {
   int effective_size;
   uint64 ts1, ts2, ts3, wtime;
 
-  int nticks = NTICKS;
+  int nticks = 1;
   MPI_Status status;
   MPI_Init(&argc, &argv);
   MPI_Comm_size(MPI_COMM_WORLD, &numtasks);
@@ -292,11 +274,7 @@ int main(int argc, char **argv) {
     timeStep(nticks, numtasks, rank, slice_size, y_size, z_size, u0, u1, r);
 
     /* time steps 2, 4, 6, ... */
-    if (nticks % 2 == 0) {
-      timeStep(nticks, numtasks, rank, slice_size, y_size, z_size, u0, u1, r);
-    } else {
       timeStep(nticks, numtasks, rank, slice_size, y_size, z_size, u1, u0, r);
-    }
   }
   MPI_Barrier(MPI_COMM_WORLD);
   ts2 = rdtscp();
@@ -328,8 +306,8 @@ int main(int argc, char **argv) {
   }
   wtime = tickToUsec(ts1, ts2);
   if (rank == 0) {
-    fprintf(stderr, "N Size: %d, NT: %d, nticks: %d, Used Time: %llu usec\n",
-            x_size, nt, nticks, wtime);
+    fprintf(stderr, "N Size: %d, NT: %d, slice_size: %d, nprocs: %d, Used Time: %llu usec\n",
+            x_size, nt, slice_size, numtasks, wtime);
   }
   /* usage: a.out > res.txt
      plot it with gnuplot: splot "res.txt" with lines */
