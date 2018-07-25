@@ -1,7 +1,6 @@
-#include "stdio.h"
-#include "x86intrin.h"
 #include <stdlib.h>
 #include <string.h>
+#include "stdio.h"
 
 #define U 14
 
@@ -11,18 +10,21 @@
 
 typedef float float8 __attribute__((vector_size(32)));
 typedef unsigned long long uint64;
-static unsigned int dummy;
 
-static inline void rdtscp(uint64 *ts) { *ts = __rdtscp(&dummy); }
+static inline void rdtscp(uint64 *u) {
+  asm volatile("rdtscp;shlq $32,%%rdx;orq %%rdx,%%rax;movq %%rax,%0"
+               : "=q"(*u)::"%rax", "%rdx", "%rcx");
+}
 
 uint64 tickToUsec(uint64 ts1, uint64 ts2) {
   return (ts2 - ts1) / (CPUSPEED_MHZ);
 }
 
-static inline float8 axpy_many(float8 a, float8 x0, float8 x1, float8 x2, float8 x3,
-                 float8 x4, float8 x5, float8 x6, float8 x7, float8 x8,
-                 float8 x9, float8 x10, float8 x11, float8 x12, float8 x13,
-                 float8 x14, float8 x15, float8 c, long n) {
+static inline float8 axpy_many(float8 a, float8 x0, float8 x1, float8 x2,
+                               float8 x3, float8 x4, float8 x5, float8 x6,
+                               float8 x7, float8 x8, float8 x9, float8 x10,
+                               float8 x11, float8 x12, float8 x13, float8 x14,
+                               float8 x15, float8 c, long n) {
   long i;
   asm volatile("# BEGIN!!!");
   for (i = 0; i < n; i++) {
@@ -116,8 +118,8 @@ int main(int argc, char **argv) {
   float8 x15 = *((float8 *)&x_[120]);
 
   rdtscp(&ts1);
-  volatile float8 y = axpy_many(a, x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12,
-                       x13, x14, x15, c, n);
+  volatile float8 y = axpy_many(a, x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10,
+                                x11, x12, x13, x14, x15, c, n);
   rdtscp(&ts2);
   double flops = U * 16 * n;
   printf("cache factor: %d\n", U);

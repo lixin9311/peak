@@ -2,13 +2,12 @@
 #include <string.h>
 #include "omp.h"
 #include "stdio.h"
-#include "x86intrin.h"
-
-#define NPROC 4
 
 #ifndef NPROC
 #define NPROC 4
 #endif
+
+#define U 16
 
 #ifndef CPUSPEED_MHZ
 #define CPUSPEED_MHZ 2900
@@ -16,12 +15,10 @@
 
 typedef float float8 __attribute__((vector_size(32)));
 typedef unsigned long long uint64;
-static unsigned int dummy;
 
-static inline void rdtscp(uint64 *ts) {
-  asm volatile("CPUID" :::);
-  *ts = __rdtscp(&dummy);
-  //   asm volatile("CPUID" :::);
+static inline void rdtscp(uint64 *u) {
+  asm volatile("rdtscp;shlq $32,%%rdx;orq %%rdx,%%rax;movq %%rax,%0"
+               : "=q"(*u)::"%rax", "%rdx", "%rcx");
 }
 
 uint64 tickToUsec(uint64 ts1, uint64 ts2) {

@@ -1,7 +1,6 @@
-#include "stdio.h"
-#include "x86intrin.h"
 #include <stdlib.h>
 #include <string.h>
+#include "stdio.h"
 
 #define U 16
 
@@ -11,9 +10,11 @@
 
 typedef float float8 __attribute__((vector_size(32)));
 typedef unsigned long long uint64;
-static unsigned int dummy;
 
-static inline void rdtscp(uint64 *ts) { *ts = __rdtscp(&dummy); }
+static inline void rdtscp(uint64 *u) {
+  asm volatile("rdtscp;shlq $32,%%rdx;orq %%rdx,%%rax;movq %%rax,%0"
+               : "=q"(*u)::"%rax", "%rdx", "%rcx");
+}
 
 uint64 tickToUsec(uint64 ts1, uint64 ts2) {
   return (ts2 - ts1) / (CPUSPEED_MHZ);
